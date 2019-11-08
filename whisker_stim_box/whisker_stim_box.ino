@@ -6,7 +6,8 @@ bool button_down;
 static uint8_t prevNextCode = 0;
 
 int menu_index = 0;
-String menu_pages[] = {"Cycles = ","On-Time = ","Off-Time = ","Start Delay = ","Push To Start"};
+int menu_max_index = 5;
+String menu_pages[] = {"Cycles = ","On-Time = ","Off-Time = ","Start Delay = ","Push To Start","  Trigger Mode"};
 String parameterNames[] = {"    Cycles","    On-Time","    Off-Time","   Start Delay"};
 int parameterValues[] = {1,1,1,1};
 
@@ -16,6 +17,7 @@ int parameterValues[] = {1,1,1,1};
 void setup() {
 
   lcd.begin(16,2);
+  pinMode(A3, INPUT);
   pinMode(A1, INPUT_PULLUP);
   pinMode(A0, INPUT_PULLUP);
   pinMode(3, INPUT_PULLUP);
@@ -24,6 +26,44 @@ void setup() {
   lcd.print("Welcome!");
   lcd.setCursor(0,1);
   lcd.print("Rotate To Begin!");
+}
+
+int trigger_mode()
+{
+  lcd.setCursor(0,0);
+  lcd.print("  Trigger Mode");
+  lcd.setCursor(0,1);
+  lcd.print("   Activated");
+  delay(2000);
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Push to exit");
+  check_button_pressed();
+  
+  while(!button_down)
+  {
+    check_button_pressed();
+    if (digitalRead(A3))
+    {
+      digitalWrite(A2, HIGH);
+      lcd.setCursor(0,1);
+      lcd.print("STATE=1"); 
+    }
+    else
+    {
+      digitalWrite(A2, LOW);
+      lcd.setCursor(0,1);
+      lcd.print("STATE=0");
+    }
+  }
+
+  digitalWrite(A2, LOW);
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Exiting trigger");
+  lcd.setCursor(0,1);
+  lcd.print("    mode");
+  delay(1000);
 }
 
 int run_program()
@@ -108,7 +148,7 @@ void update_menu_pos(bool increment)
 {
   if(increment)
   {
-    if(menu_index >= 4)
+    if(menu_index >= menu_max_index)
     {
       menu_index = 0;
     }
@@ -121,7 +161,7 @@ void update_menu_pos(bool increment)
   {
     if(menu_index <= 0)
     {
-      menu_index = 4;
+      menu_index = menu_max_index;
     }
     else
     {
@@ -161,6 +201,9 @@ void print_menu()
       lcd.print("Push to select");
       break;
     case 4:
+      lcd.print(menu_pages[menu_index]);
+      break;
+    case 5:
       lcd.print(menu_pages[menu_index]);
       break;
     default:
@@ -237,6 +280,9 @@ void menu_select()
       break;
     case 4:
       run_program();
+      break;
+    case 5:
+      trigger_mode();
       break;
     default:
       break;
